@@ -29,7 +29,8 @@
   ],
   "activationEvents": [
     "onCommand:annotator.annotate",
-    "onCommand:annotator.switchDiffWithinCommit"
+    "onCommand:annotator.switchDiffWithinCommit",
+    "onCommand:annotator.svnannotate"
   ],
   "main": "./out/extension",
   "contributes": {
@@ -96,6 +97,11 @@
       {
         "command": "annotator.switchDiffWithinCommit",
         "title": "Show Diff of Another File Changed in the Same Commit",
+        "category": "Annotator"
+      },
+      {
+        "command": "annotator.svnannotate",
+        "title": "SVN Annotate the Current File or the File Before the Commit (if on Commit Diff)",
         "category": "Annotator"
       }
     ]
