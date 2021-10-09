@@ -1,5 +1,6 @@
 import {ChangedFileLabelMaker} from './changed-file-label-maker';
 import {AnnotateCommand} from './command/annotate';
+import {AnnotateSvnCommand} from './command/svnannotate';
 import {SwitchDiffCommand} from './command/switch-diff';
 import {AppIntegrator} from './app-integrator';
 import {ChangedFileListParser} from './changed-file-list-parser';
@@ -7,13 +8,18 @@ import {ChangedFilePicker} from './changed-file-picker';
 import {ConfigStore} from './config-store';
 import {EditorTitleResolver} from './editor-title-resolver';
 import {GitAnnotationContentGenerator} from './git-annotation/git-annotation-content-generator';
+import {SvnAnnotationContentGenerator} from './svn-annotator/svn-annotation-content-generator';
 import {GitAnnotationHtmlDirectorFactory} from './git-annotation/git-annotation-html-director-factory';
 import {GitBlameOutputParser} from './git-blame-output-parser';
+import {SvnBlameOutputParser} from './svn-blame-output-parser';
 import {GitContentProvider} from './git-content-provider';
+import {SvnContentProvider} from './svn-content-provider';
 import {GitService} from './git-service';
+import {SvnService} from './svn-service';
 import {ShellCommandRunner} from './shell-command-runner';
 import {TakeDiffCommand} from './command/take-diff';
 import {UriService} from './uri-service';
+import {SvnLogService} from './svn-annotator/svn-log-service';
 
 const childProcess = require('child_process');
 const vscode = require('vscode');
@@ -21,16 +27,21 @@ const vscode = require('vscode');
 export class AppIntegratorFactory {
     private readonly _extensionContext: any;
     private _annotateCommand: AnnotateCommand;
+    private _annotateSvnCommand: AnnotateSvnCommand;
     private _changedFilePicker: ChangedFilePicker;
     private _configStore: ConfigStore;
     private _editTitleResolver: EditorTitleResolver;
     private _gitAnnotationContentGenerator: GitAnnotationContentGenerator;
+    private _svnAnnotationContentGenerator: SvnAnnotationContentGenerator;
     private _gitAnnotationHtmlDirectorFactory: GitAnnotationHtmlDirectorFactory;
     private _gitContentProvider: GitContentProvider;
+    private _svnContentProvider: SvnContentProvider;
     private _gitService: GitService;
+    private _svnService: SvnService;
     private _switchDiffCommand: SwitchDiffCommand;
     private _takeDiffCommand: TakeDiffCommand;
     private _uriService: UriService;
+    private _svnLogService: SvnLogService;
 
     constructor(extensionContext) {
         this._extensionContext = extensionContext;
@@ -41,6 +52,7 @@ export class AppIntegratorFactory {
             vscode,
             gitContentProvider: this._getGitContentProvider(),
             annotateCommand: this._getAnnotateCommand(),
+            annotateSvnCommand: this._getAnnotateSvnCommand(),
             switchDiffCommand: this._getSwitchDiffCommand(),
             takeDiffCommand: this._getTakeDiffCommand()
         });
@@ -51,11 +63,27 @@ export class AppIntegratorFactory {
         return this._annotateCommand;
     }
 
+    _getAnnotateSvnCommand() {
+        this._annotateSvnCommand = this._annotateSvnCommand || this._createAnnotateSvnCommand();
+        return this._annotateSvnCommand;
+    }
+
     _createAnnotateCommand() {
         return new AnnotateCommand({
             vscode,
             extensionContext: this._extensionContext,
             contentProvider: this._getGitContentProvider(),
+            editorTitleResolver: this._getEditTitleResolver(),
+            logger: this._getLogger(),
+            uriService: this._getUriService()
+        });
+    }
+
+    _createAnnotateSvnCommand() {
+        return new AnnotateSvnCommand({
+            vscode,
+            extensionContext: this._extensionContext,
+            contentProvider: this._getSvnContentProvider(),
             editorTitleResolver: this._getEditTitleResolver(),
             logger: this._getLogger(),
             uriService: this._getUriService()
@@ -98,10 +126,23 @@ export class AppIntegratorFactory {
         return this._gitAnnotationContentGenerator;
     }
 
+    _getSvnAnnotationContentGenerator() {
+        this._svnAnnotationContentGenerator = this._svnAnnotationContentGenerator ||
+                this._createSvnAnnotationContentGenerator();
+        return this._svnAnnotationContentGenerator;
+    }
+
     _createGitAnnotationContentGenerator() {
         return new GitAnnotationContentGenerator({
             gitAnnotationHtmlDirectorFactory: this._getGitAnnotationHtmlDirectorFactory(),
             gitService: this._getGitService()
+        });
+    }
+
+    _createSvnAnnotationContentGenerator() {
+        return new SvnAnnotationContentGenerator({
+            gitAnnotationHtmlDirectorFactory: this._getGitAnnotationHtmlDirectorFactory(),
+            svnService: this._getSvnService()
         });
     }
 
@@ -122,10 +163,23 @@ export class AppIntegratorFactory {
         return this._gitContentProvider;
     }
 
+    _getSvnContentProvider() {
+        this._svnContentProvider = this._svnContentProvider || this._createSvnContentProvider();
+        return this._svnContentProvider;
+    }
+
     _createGitContentProvider() {
         return new GitContentProvider({
             gitAnnotationContentGenerator: this._getGitAnnotationContentGenerator(),
             gitService: this._getGitService(),
+            uriService: this._getUriService()
+        });
+    }
+
+    _createSvnContentProvider() {
+        return new SvnContentProvider({
+            svnAnnotationContentGenerator: this._getSvnAnnotationContentGenerator(),
+            svnService: this._getSvnService(),
             uriService: this._getUriService()
         });
     }
@@ -135,12 +189,27 @@ export class AppIntegratorFactory {
         return this._gitService;
     }
 
+    _getSvnService() {
+        this._svnService = this._svnService || this._createSvnService();
+        return this._svnService;
+    }
+
     _createGitService() {
         return new GitService({
             configStore: this._getConfigStore(),
             changedFileListParser: new ChangedFileListParser(),
             gitBlameOutputParser: new GitBlameOutputParser(),
             shellCommandRunner: new ShellCommandRunner({childProcess})
+        });
+    }
+
+    _createSvnService() {
+        return new SvnService({
+            configStore: this._getConfigStore(),
+            changedFileListParser: new ChangedFileListParser(),
+            svnBlameOutputParser: new SvnBlameOutputParser(),
+            shellCommandRunner: new ShellCommandRunner({childProcess}),
+            svnLogService: this._getSvnLogService()
         });
     }
 
@@ -186,6 +255,18 @@ export class AppIntegratorFactory {
         return new UriService({
             Uri: vscode.Uri,
             getCurrentDateFn: () => Date.now()
+        });
+    }
+
+    _getSvnLogService() {
+        this._svnLogService = this._svnLogService || this._createSvnLogService();
+        return this._svnLogService;
+    }
+
+    _createSvnLogService() {
+        return new SvnLogService({
+            configStore: this._getConfigStore(),
+            shellCommandRunner: new ShellCommandRunner({childProcess})
         });
     }
 

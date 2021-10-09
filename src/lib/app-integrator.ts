@@ -1,7 +1,7 @@
 import * as Const from './const';
 import {GitContentProvider} from './git-content-provider';
 import {AnnotateCommand} from './command/annotate';
-//import {SvnAnnotateCommand} from './command/svnannotate';
+import {AnnotateSvnCommand} from './command/svnannotate';
 import {SwitchDiffCommand} from './command/switch-diff';
 import {TakeDiffCommand} from './command/take-diff';
 
@@ -9,7 +9,7 @@ export class AppIntegrator {
     private readonly _vscode: any;
     private readonly _gitContentProvider: GitContentProvider;
     private readonly _annotateCommand: AnnotateCommand;
-    private readonly _svnannotateCommand: AnnotateCommand;
+    private readonly _svnannotateCommand: AnnotateSvnCommand;
     private readonly _switchDiffCommand: SwitchDiffCommand;
     private readonly _takeDiffCommand: TakeDiffCommand;
 
@@ -17,7 +17,7 @@ export class AppIntegrator {
         this._vscode = params.vscode;
         this._gitContentProvider = params.gitContentProvider;
         this._annotateCommand = params.annotateCommand;
-        this._svnannotateCommand = params.annotateCommand;
+        this._svnannotateCommand = params.annotateSvnCommand;
         this._switchDiffCommand = params.switchDiffCommand;
         this._takeDiffCommand = params.takeDiffCommand;
     }

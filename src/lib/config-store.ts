@@ -17,6 +17,11 @@ export class ConfigStore {
         return extensionConfig.get(configName);
     }
 
+    getSvnConfig(configName) {
+        const extensionConfig = this._workspace.getConfiguration('svn');
+        return extensionConfig.get(configName);
+    }
+
     getExtensionConfig(configName) {
         const extensionConfig = this._workspace.getConfiguration(Const.EXTENSION_NAME);
         return extensionConfig.get(configName);

@@ -1,14 +1,14 @@
 import {UriService} from '../uri-service';
 import {EditorTitleResolver} from '../editor-title-resolver';
-import {GitContentProvider} from '../git-content-provider';
+import {SvnContentProvider} from '../svn-content-provider';
 
-export class AnnotateCommand {
+export class AnnotateSvnCommand {
     private readonly _vscode: any;
     private readonly _extensionContext: any;
     private readonly _logger: Console | { error: any };
     private readonly _uriService: UriService;
     private readonly _editorTitleResolver: EditorTitleResolver;
-    private readonly _contentProvider: GitContentProvider;
+    private readonly _contentProvider: SvnContentProvider;
 
     constructor(params) {
         this._vscode = params.vscode;

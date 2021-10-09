@@ -22,7 +22,7 @@ export class AnnotateCommand {
     async execute(editor) {
         try {
             const uri = this._uriService.convertToAnnotateFileAction(editor.document.uri);
-            if (!uri) return;
+            if (!uri) return;		    
 
             const title = this._editorTitleResolver.resolve(uri);
             const panel = this._vscode.window.createWebviewPanel('annotator-annotation',
